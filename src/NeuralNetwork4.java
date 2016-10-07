@@ -1,5 +1,5 @@
 
-public class HomeWork4 {
+public class NeuralNetwork4 {
 	/***
 	 * 類神經2 3 3 1
 	 * @param args

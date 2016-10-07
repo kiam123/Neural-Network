@@ -1,7 +1,7 @@
 
-public class HomeWork2 {
+public class NeuralNetwork3 {
 	/***
-	 * 類神經2 3 2 2
+	 * 類神經2 3 3 1
 	 * @param args
 	 */
 	public static void main(String[] args) {
