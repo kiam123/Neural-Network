@@ -2,6 +2,7 @@
 public class NeuralNetwork2 {
 	/***
 	 * 類神經2 3 2 2
+	 * 2x + 3y = z
 	 * 
 	 * @param args
 	 */
@@ -151,7 +152,15 @@ public class NeuralNetwork2 {
 
 	}
 
-	public static void backward(NeuralNetwork2 neuralNetwork) {
+	public static void backwardW2(NeuralNetwork2 neuralNetwork) {
+
+	}
+	
+	public static void backwardD1(NeuralNetwork2 neuralNetwork) {
+
+	}
+	
+	public static void backwardW1(NeuralNetwork2 neuralNetwork) {
 
 	}
 }
