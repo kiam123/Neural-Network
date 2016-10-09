@@ -183,7 +183,6 @@ public class NeuralNetwork1 {
 				}
 				layer2(neuralNetwork);
 				layer3(neuralNetwork);
-				findError(neuralNetwork);
 				System.out.println(neuralNetwork.actualValue[i]);
 			}
 		}
