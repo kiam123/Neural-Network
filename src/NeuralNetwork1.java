@@ -13,13 +13,13 @@ public class NeuralNetwork1 {
 	public static final double learnRate = 0.001;
 	public double[] tranData = new double[tranX]; // 訓練資料
 	public double[] testData = new double[testX]; // 測試資料
-	public double maxTranX, minTranX;
+	public double maxTranX, minTranX, outputR, error;
 	public double maxTestX, minTestX;
-	public double[] expectValue, actualValue, errorValue;
-	public double[][] funcTranQ, outputTranQ, tranWeight1, tranWeight2;
-	public double[][] functionTestQ, outputTestQ, testWeight1, testWeight2, d1;
+	public double[] expectValue, tranActualValue, testActualValue, errorValue;
+	public static double[][] funcTranQ, outputTranQ, tranWeight1, tranWeight2;
+	public static double[][] functionTestQ, outputTestQ, testWeight1, testWeight2, d1;
 
-	public static void main(String[] args) throws IOException {
+	public static void main(String[] args) {
 		// TODO Auto-generated method stub
 		NeuralNetwork1 neuralNetwork = new NeuralNetwork1();
 
@@ -33,17 +33,18 @@ public class NeuralNetwork1 {
 
 		normalization(neuralNetwork);
 		trainingExceptValue(neuralNetwork);
-
-		layer2(neuralNetwork);
-		layer3(neuralNetwork);
-		findError(neuralNetwork);
-		
-		updateMessenger(neuralNetwork);
+		trainingData(neuralNetwork);
+		testingData(neuralNetwork);
 	}
 
 	// 分配訓練資料
-	public static void initTranMatrix(NeuralNetwork1 neuralNetwork) throws IOException {
+	public static void initTranMatrix(NeuralNetwork1 neuralNetwork) {
 		System.out.println("初始化訓練資料");
+
+		neuralNetwork.funcTranQ = new double[1][3];
+		neuralNetwork.outputTranQ = new double[1][3];
+		neuralNetwork.errorValue = new double[tranX];
+
 		neuralNetwork.maxTranX = neuralNetwork.minTranX = neuralNetwork.tranData[0] = (Math.random() * 100);
 		System.out.print(neuralNetwork.tranData[0] + "  ");
 		for (int i = 1; i < tranX; i++) {
@@ -77,18 +78,17 @@ public class NeuralNetwork1 {
 
 	// 初始化權重
 	public static void initWeight(NeuralNetwork1 neuralNetwork) {
-		neuralNetwork.tranWeight1 = new double[tranX][3];
-		neuralNetwork.tranWeight2 = new double[tranX][3];
-		neuralNetwork.d1 = new double[tranX][3];
+		neuralNetwork.tranWeight1 = new double[1][3];
+		neuralNetwork.tranWeight2 = new double[1][3];
+		neuralNetwork.d1 = new double[1][3];
 
-		for (int i = 0; i < tranX; i++) {
-			for (int j = 0; j < 3; j++) {
-				neuralNetwork.tranWeight1[i][j] = Math.random() * 100;
-				neuralNetwork.tranWeight2[i][j] = Math.random() * 100;
-				neuralNetwork.d1[i][j] = 1;
+		for (int j = 0; j < 3; j++) {
+			neuralNetwork.tranWeight1[0][j] = Math.random();
+			neuralNetwork.tranWeight2[0][j] = Math.random();
+			neuralNetwork.d1[0][j] = Math.random();
 
-			}
 		}
+
 		// System.out.println("初始： "+neuralNetwork.tranWeight2[0][0]);
 	}
 
@@ -114,77 +114,96 @@ public class NeuralNetwork1 {
 	// 取得期望值
 	public static void trainingExceptValue(NeuralNetwork1 neuralNetwork) {
 		neuralNetwork.expectValue = new double[tranX];
+		neuralNetwork.testActualValue = new double[testX];
 		System.out.println("期望值");
+		System.out.println("訓練");
 		for (int i = 0; i < neuralNetwork.tranX; i++) {
 			neuralNetwork.expectValue[i] = 2 * neuralNetwork.tranData[i];
 			System.out.print(neuralNetwork.expectValue[i] + "  ");
 		}
+		System.out.println("期望值");
+		System.out.println("測試");
+		for (int i = 0; i < neuralNetwork.testX; i++) {
+			neuralNetwork.testActualValue[i] = 2 * neuralNetwork.testData[i];
+			System.out.print(neuralNetwork.testActualValue[i] + "  ");
+		}
 		System.out.print("\n\n");
 	}
 
-	// 第二層
-	public static void layer2(NeuralNetwork1 neuralNetwork) {
-		neuralNetwork.funcTranQ = new double[tranX][3];
-		neuralNetwork.outputTranQ = new double[tranX][3];
-//		System.out.println("layer2");
-		for (int i = 0; i < neuralNetwork.tranX; i++) {
-			for (int j = 0; j < 3; j++) {
-				neuralNetwork.funcTranQ[i][j] = neuralNetwork.tranData[i] * neuralNetwork.tranWeight1[i][j]
-						+ neuralNetwork.d1[i][j];
-				neuralNetwork.outputTranQ[i][j] = (Math.exp(neuralNetwork.funcTranQ[i][j])
-						- Math.exp(-neuralNetwork.funcTranQ[i][j]))
-						/ (Math.exp(neuralNetwork.funcTranQ[i][j]) - Math.exp(-neuralNetwork.funcTranQ[i][j]));
-//				System.out.print(neuralNetwork.tranWeight1[i][j] + " ");
-			}
+	public static void forward(NeuralNetwork1 neuralNetwork, double data) {
+		double sum = 0;
+
+		for (int i = 0; i < 3; i++) {
+			neuralNetwork.funcTranQ[0][i] = data * neuralNetwork.tranWeight1[0][i];
+			neuralNetwork.outputTranQ[0][i] = (Math.exp(neuralNetwork.funcTranQ[0][i])
+					- Math.exp(-neuralNetwork.funcTranQ[0][i]))
+					/ (Math.exp(neuralNetwork.funcTranQ[0][i]) + Math.exp(-neuralNetwork.funcTranQ[0][i]));
+			sum = sum + neuralNetwork.outputTranQ[0][i] * neuralNetwork.tranWeight2[0][i];
 		}
-//		System.out.print("\n\n");
+		neuralNetwork.outputR = sum;
 	}
 
-	// 第三層
-	public static void layer3(NeuralNetwork1 neuralNetwork) {
-//		System.out.println("實際值");
-		neuralNetwork.actualValue = new double[tranX];
-		for (int i = 0; i < neuralNetwork.tranX; i++) {
-			for (int j = 0; j < 3; j++) {
-				neuralNetwork.actualValue[i] = neuralNetwork.outputTranQ[i][j]
-						+ neuralNetwork.outputTranQ[i][j] * neuralNetwork.tranWeight2[i][j];
-			}
-//			System.out.print(neuralNetwork.actualValue[i] + "  ");
+	public static void backward(NeuralNetwork1 neuralNetwork, double tranData, double expectValue) {
+		double errorValue = 0;
+		neuralNetwork.error = expectValue - neuralNetwork.outputR;
+		double[][] tempWeight2 = copyMatic(neuralNetwork.tranWeight2);
+		double[][] tempD1 = copyMatic(neuralNetwork.d1);
+		double[][] tempWeight1 = copyMatic(neuralNetwork.tranWeight1);
+		for (int i = 0; i < 3; i++) {
+			neuralNetwork.tranWeight2[0][i] = neuralNetwork.tranWeight2[0][i]
+					+ neuralNetwork.learnRate * neuralNetwork.error * neuralNetwork.outputTranQ[0][i];
+			neuralNetwork.d1[0][i] = tempD1[0][i]
+					+ neuralNetwork.learnRate * neuralNetwork.error * tempWeight2[0][i] * (4 / Math.pow(
+							(Math.exp(neuralNetwork.funcTranQ[0][i]) + Math.exp(-neuralNetwork.funcTranQ[0][i])), 2));
+			neuralNetwork.tranWeight1[0][i] = neuralNetwork.tranWeight1[0][i] + (neuralNetwork.learnRate * neuralNetwork.error
+					* tempWeight2[0][i]
+					* (4 / Math.pow(
+							(Math.exp(neuralNetwork.funcTranQ[0][i]) + Math.exp(-neuralNetwork.funcTranQ[0][i])), 2))
+					* neuralNetwork.outputTranQ[0][i]);
 		}
-//		System.out.print("\n\n");
 	}
 
-	// 尋找錯誤
-	public static void findError(NeuralNetwork1 neuralNetwork) {
-		// System.out.println("錯誤值");
-		neuralNetwork.errorValue = new double[tranX];
-		for (int i = 0; i < neuralNetwork.tranX; i++) {
-			neuralNetwork.errorValue[i] = neuralNetwork.expectValue[i] - neuralNetwork.actualValue[i];
-			// System.out.print(neuralNetwork.errorValue[i]+" ");
+	public static double[][] copyMatic(double matrixA[][]) {
+		double[][] retMatrix = new double[1][3];
+
+		for (int i = 0; i < 3; i++) {
+			retMatrix[0][i] = matrixA[0][i];
 		}
-		// System.out.print("\n\n");
+
+		return retMatrix;
 	}
 
-	public static void updateMessenger(NeuralNetwork1 neuralNetwork) {
-		for (int i = tranX - 1; i >= 0; i--) {
-			for (int k = 0; k < 1000; k++) {
-				for (int j = 0; j < 3; j++) {
-					neuralNetwork.tranWeight2[i][j] = neuralNetwork.tranWeight2[i][j]
-							+ learnRate * neuralNetwork.errorValue[i] * neuralNetwork.outputTranQ[i][j];
+	public static void trainingData(NeuralNetwork1 neuralNetwork) {
+		int tran = 1000;
+		double sum = 0;
 
-					neuralNetwork.d1[i][j] = neuralNetwork.d1[i][j] + learnRate * neuralNetwork.errorValue[i]
-							* neuralNetwork.tranWeight2[i][j] * Math.pow(4 / (Math.exp(neuralNetwork.funcTranQ[i][j]))
-									- Math.exp(-neuralNetwork.funcTranQ[i][j]), 2);
-
-					neuralNetwork.tranWeight1[i][j] = neuralNetwork.d1[i][j] + learnRate * neuralNetwork.errorValue[i]
-							* neuralNetwork.tranWeight1[i][j] * Math.pow(4 / (Math.exp(neuralNetwork.funcTranQ[i][j]))
-									- Math.exp(-neuralNetwork.funcTranQ[i][j]), 2)
-							* neuralNetwork.tranData[i];
-				}
-				layer2(neuralNetwork);
-				layer3(neuralNetwork);
-				System.out.println(neuralNetwork.actualValue[i]);
+		for (int i = 0; i < tran; i++) {
+			for (int j = 0; j < neuralNetwork.tranX; j++) {
+				forward(neuralNetwork, neuralNetwork.tranData[j]);
+				backward(neuralNetwork, neuralNetwork.tranData[j], neuralNetwork.expectValue[j]);
+				neuralNetwork.errorValue[j] = neuralNetwork.error;
 			}
+
+			for (int j = 0; j < neuralNetwork.errorValue.length; j++) {
+				sum += Math.pow(neuralNetwork.errorValue[j], 2);
+			}
+			sum /= neuralNetwork.errorValue.length;
+			sum = Math.sqrt(sum);
+			System.out.println("Training RMS(error): " + sum);
 		}
+	}
+
+	public static void testingData(NeuralNetwork1 neuralNetwork) {
+		double sum = 0;
+		int i;
+		double[] tempError = new double[neuralNetwork.testX];
+		for (i= 0; i < neuralNetwork.testX; i++) {
+			forward(neuralNetwork, neuralNetwork.testData[i]);
+			tempError[i] = neuralNetwork.testActualValue[i] - neuralNetwork.outputR;
+			sum += Math.pow(tempError[i], 2);
+
+			
+		}
+		System.out.println("Test RMS(error): " + Math.sqrt(sum / (i+1)));
 	}
 }
